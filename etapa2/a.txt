@@ -1,0 +1,12 @@
+(define (update-engagements engagements p1 p2)
+  (cond ((null? engagements) '())
+        ((equal? p1 (caar engagements))
+         (cons (cons p1 p2) (cdr engagements)))
+        (else
+         (cons (car engagements)
+               (update-engagements (cdr engagements) p1 p2)))))
+
+(define (update-engagements2 engagements p1 p2)
+  (change-first (lambda (couple) (eq? (car couple) p1))
+                engagements
+                (cons p1 p2)))

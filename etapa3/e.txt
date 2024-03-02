@@ -1,0 +1,53 @@
+(define (engage free-men engagements mpref wpref)
+  (let ((unengaged-men free-men)
+        (proposals '()))
+    (define (loop)
+      (cond ((null? unengaged-men) engagements)
+            (else
+             (let ((m (car unengaged-men))
+                   (m-prefs (cdr (assoc m mpref))))
+               (let loop2 ((w-prefs m-prefs))
+                 (cond ((null? w-prefs) (loop))
+                       ((and (not (null? w-prefs))
+                             (not (memq (car w-prefs) (map car proposals)))))
+                       (let ((w (car w-prefs)))
+                         (set! w-prefs (cdr w-prefs))
+                         (let ((m-prime (cdr (assoc w engagements)))))
+                         (cond ((null? m-prime)
+                                (set! engagements (cons (cons w m) engagements))
+                                (set! unengaged-men (cdr unengaged-men))
+                                (loop))
+                               ((< (position m w-prefs) (position m m-prime)))
+                                (set! unengaged-men (cons m (cdr unengaged-men)))
+                                (set! proposals (cons (cons w m) proposals))
+                                (set! engagements (assoc-replace w m engagements)))
+                               (else
+                                (set! unengaged-men (cons m (cdr unengaged-men)))
+                                (loop)))))))))
+    (loop)))
+
+(define (engage free-men engagements mpref wpref)
+  ; Verificăm dacă există bărbați nelogodiți
+  (cond ((null? free-men) engagements)
+        (else
+         ; Selecționăm primul bărbat nelogodit și preferințele lui
+         (let* ((m (car free-men))
+                (m-prefs (cdr (assoc m mpref)))
+                ; Selecționăm prima femeie din preferințele lui m pe care m nu a cerut-o încă
+                (w-prefs m-prefs)
+                (w (car w-prefs)))
+           ; Verificăm dacă femeia w este nelogodită
+           (cond ((null? (cdr (assoc w engagements)))
+                  ; Adăugăm perechea (w, m) la engagements
+                  (engage (cdr free-men) (cons (cons w m) engagements) mpref wpref))
+                 (else
+                  ; Verificăm preferințele femeii w
+                  (let ((m-prime (cdr (assoc w engagements))))
+                    ; Dacă w îl preferă pe m lui m'
+                    (if (< (position m w-prefs) (position m m-prime))
+                        ; Atunci m' devine liber și w se logodește cu m
+                        (engage (cons m-prime (cdr free-men))
+                                (assoc-replace w m engagements)
+                                mpref wpref)
+                        ; Altfel, repetăm procesul cu următoarea femeie din lista lui m
+                        (engage free-men engagements mpref wpref)))))))))
